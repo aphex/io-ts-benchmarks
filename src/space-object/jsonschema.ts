@@ -1,4 +1,3 @@
-import { console } from 'fp-ts'
 import { validate } from 'jsonschema'
 
 export const getType = () => {
