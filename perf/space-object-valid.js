@@ -5,6 +5,7 @@ const { getType: getIOType } = require('../lib/space-object/io-ts')
 const { getType: getTCombType } = require('../lib/space-object/tcomb-validation')
 const { getType: getJoiType } = require('../lib/space-object/joi')
 const { getType: getAJVType } = require('../lib/space-object/ajv')
+const { getType: getJSONSchema } = require('../lib/space-object/jsonschema')
 const { getType: getZodType } = require('../lib/space-object/zod')
 
 const suite = new Benchmark.Suite()
@@ -30,8 +31,11 @@ const input = {
   ],
 }
 
-console.log('Lambda Test: Valid Input')
 suite
+  .add('jsonschema', () => {
+    const { validate, schema } = getJSONSchema()
+    validate(input, schema)
+  })
   .add('zod', () => {
     const t = getZodType()
     t.safeParse(input)

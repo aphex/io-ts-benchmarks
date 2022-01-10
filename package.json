@@ -29,6 +29,7 @@
     "fp-ts": "^2.11.6",
     "io-ts": "^2.2.16",
     "joi": "^17.5.0",
+    "jsonschema": "^1.4.0",
     "microtime": "^3.0.0",
     "prettier": "^2.5.1",
     "runtypes": "^6.5.0",
