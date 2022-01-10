@@ -3,8 +3,9 @@
 // node --prof-process isolate-0xnnnnnnnnnnnn-v8.log > processed.txt
 
 const Benchmark = require('benchmark')
-const { SpaceObjectIots } = require('../lib/space-object/io-ts')
+const { getType } = require('../lib/space-object/io-ts')
 
+const io = getType()
 const suite = new Benchmark.Suite()
 
 const input = {
@@ -22,20 +23,21 @@ const input = {
         location: [5, 6, 7],
         mass: 8,
         population: 1000,
-        habitable: true
-      }
-    }
-  ]
+        habitable: true,
+      },
+    },
+  ],
 }
 
 suite
-  .add('io-ts', function() {
-    SpaceObjectIots.decode(input)
+  .add('io-ts', () => {
+    io.decode(input)
   })
-  .on('cycle', function(event) {
-    console.log(String(event.target))
+  .on('cycle', (event) => {
+    console.log(event.target.toString())
   })
-  .on('complete', function() {
-    console.log('Fastest is ' + this.filter('fastest').map('name'))
+  .on('complete', (e) => {
+    const { currentTarget: suite } = e
+    console.log(`Fastest is ${suite.filter('fastest').map('name')}\n`)
   })
   .run({ async: true })

@@ -1,9 +1,11 @@
 const Benchmark = require('benchmark')
-const { SpaceObjectRuntypes } = require('../lib/space-object/runtypes')
-const { SpaceObjectIots } = require('../lib/space-object/io-ts')
-const { SpaceObjectTcombValidation, validate } = require('../lib/space-object/tcomb-validation')
-const { SpaceObjectJoi } = require('../lib/space-object/joi')
-const { validateJSON } = require('../lib/space-object/ajv')
+
+const { getType: getRuntypeType } = require('../lib/space-object/runtypes')
+const { getType: getIOType } = require('../lib/space-object/io-ts')
+const { getType: getTCombType } = require('../lib/space-object/tcomb-validation')
+const { getType: getJoiType } = require('../lib/space-object/joi')
+const { getType: getAJVType } = require('../lib/space-object/ajv')
+const { getType: getZodType } = require('../lib/space-object/zod')
 
 const suite = new Benchmark.Suite()
 
@@ -22,41 +24,49 @@ const input = {
         location: [5, 6, 7],
         mass: 8,
         population: 1000,
-        habitable: true
-      }
-    }
-  ]
+        habitable: true,
+      },
+    },
+  ],
 }
 
-// console.log(SpaceObjectRuntypes.validate(input))
-// console.log(SpaceObjectIots.decode(input))
-// console.log(validate(input, SpaceObjectTcombValidation))
-// console.log(SpaceObjectJoi.validate(input))
-// console.log(validateJSON(input))
-
+console.log('Lambda Test: Valid Input')
 suite
-  .add('runtypes', function() {
-    SpaceObjectRuntypes.validate(input)
+  .add('zod', () => {
+    const t = getZodType()
+    t.safeParse(input)
   })
-  .add('io-ts', function() {
-    SpaceObjectIots.decode(input)
+  .add('runtypes', () => {
+    const t = getRuntypeType()
+    t.validate(input)
   })
-  .add('io-ts (using is instead of decode)', function() {
-    SpaceObjectIots.is(input)
+  .add('io-ts: decode', () => {
+    const t = getIOType()
+    t.decode(input)
   })
-  .add('tcomb-validation', function() {
-    validate(input, SpaceObjectTcombValidation)
+  .add('io-ts: is', () => {
+    const t = getIOType()
+    t.is(input)
   })
-  .add('joi', function() {
-    SpaceObjectJoi.validate(input)
+  .add('tcomb-validation', () => {
+    const { validate, type } = getTCombType()
+    validate(input, type)
   })
-  .add('ajv', function() {
-    validateJSON(input)
+  .add('joi', () => {
+    const t = getJoiType()
+    t.validate(input)
   })
-  .on('cycle', function(event) {
-    console.log(String(event.target))
+  .add('ajv', () => {
+    const t = getAJVType()
+    t(input)
   })
-  .on('complete', function() {
-    console.log('Fastest is ' + this.filter('fastest').map('name'))
+  .on('cycle', (event) => {
+    const { mean } = event.target.stats
+    const ms = (mean * 1000).toFixed(4)
+    console.log(`${event.target.toString()} / ${ms}ms`)
+  })
+  .on('complete', (e) => {
+    const { currentTarget: suite } = e
+    console.log(`Fastest is ${suite.filter('fastest').map('name')}\n`)
   })
   .run({ async: true })
